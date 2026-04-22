@@ -58,7 +58,7 @@ export default function Reports() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <select value={stationId} onChange={e => setStationId(e.target.value)}
-            className="input-field text-sm py-2">
+            className="bg-[#1a2255] border border-[#2B3EE6]/40 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#C8F000]/50">
             <option value="">All Stations</option>
             {stations.map(s => (
               <option key={s.station_id} value={s.station_id}>{s.station_name}</option>

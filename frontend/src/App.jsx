@@ -17,6 +17,7 @@ import TechnicianDashboard   from './pages/technician/TechnicianDashboard';
 import DiagnosticPortal      from './pages/technician/DiagnosticPortal';
 import RepairTickets         from './pages/technician/RepairTickets';
 import MaintenanceChecklist  from './pages/technician/MaintenanceChecklist';
+import TechnicianReport      from './pages/technician/TechnicianReport';
 import AdminDashboard        from './pages/admin/AdminDashboard';
 import UserManagement        from './pages/admin/UserManagement';
 import PredictiveAlerts      from './pages/admin/PredictiveAlerts';
@@ -86,6 +87,8 @@ export default function App() {
             <ProtectedRoute roles={['TECHNICIAN','ADMIN']}><AppLayout><RepairTickets /></AppLayout></ProtectedRoute>} />
           <Route path="/technician/checklist" element={
             <ProtectedRoute roles={['TECHNICIAN','ADMIN']}><AppLayout><MaintenanceChecklist /></AppLayout></ProtectedRoute>} />
+          <Route path="/technician/report" element={
+            <ProtectedRoute roles={['TECHNICIAN','ADMIN']}><AppLayout><TechnicianReport /></AppLayout></ProtectedRoute>} />
 
           {/* ADMIN */}
           <Route path="/admin/dashboard" element={

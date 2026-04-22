@@ -5,7 +5,19 @@ const db = require('../config/db');
 // @access  Private
 exports.getAllStations = async (req, res) => {
   try {
-    const stations = await db.query('SELECT * FROM stations WHERE is_active = true ORDER BY station_name ASC');
+    const stations = await db.query(`
+      SELECT s.*,
+        COUNT(b.battery_id) FILTER (WHERE b.status = 'AVAILABLE') AS available_count,
+        COUNT(b.battery_id) FILTER (WHERE b.status = 'CHARGING')  AS charging_count,
+        COUNT(b.battery_id) FILTER (WHERE b.status = 'IN_USE')    AS in_use_count,
+        COUNT(b.battery_id) FILTER (WHERE b.status = 'FLAGGED')   AS flagged_count,
+        COUNT(b.battery_id) AS total_batteries
+      FROM stations s
+      LEFT JOIN batteries b ON b.station_id = s.station_id
+      WHERE s.is_active = true
+      GROUP BY s.station_id
+      ORDER BY s.station_name ASC
+    `);
     res.status(200).json({ status: 'success', data: stations.rows });
   } catch (err) {
     console.error(err.message);

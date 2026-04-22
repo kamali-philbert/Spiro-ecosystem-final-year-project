@@ -20,6 +20,7 @@ const techLinks = [
   { to: '/technician/portal',    icon: Wrench,          label: 'Diagnostic Portal' },
   { to: '/technician/checklist', icon: Battery,         label: 'Checklist' },
   { to: '/technician/tickets',   icon: ClipboardList,   label: 'Repair Tickets' },
+  { to: '/technician/report',    icon: FileText,        label: 'My Report' },
 ];
 
 const cashierLinks = [
@@ -41,6 +42,7 @@ const adminLinks = [
   { to: '/admin/users',            icon: Users,           label: 'Users',          group: 'Manage' },
   { to: '/admin/subscriptions',    icon: CreditCard,      label: 'Subscriptions',  group: 'Manage' },
   { to: '/admin/reports',          icon: FileText,        label: 'Daily Reports',  group: 'Manage' },
+  { to: '/technician/report',      icon: FileText,        label: 'Tech Reports',   group: 'Manage' },
 ];
 
 export default function Sidebar() {

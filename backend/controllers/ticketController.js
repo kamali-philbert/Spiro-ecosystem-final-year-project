@@ -2,7 +2,15 @@ const db = require('../config/db');
 
 exports.getAllTickets = async (req, res) => {
   try {
-    const tickets = await db.query('SELECT * FROM repair_tickets ORDER BY created_at DESC');
+    const tickets = await db.query(`
+      SELECT rt.*, 
+             u.full_name AS technician_name,
+             b.serial_number AS battery_serial
+      FROM repair_tickets rt
+      LEFT JOIN users u ON rt.technician_id = u.user_id
+      LEFT JOIN batteries b ON rt.battery_id = b.battery_id
+      ORDER BY rt.created_at DESC
+    `);
     res.status(200).json({ status: 'success', data: tickets.rows });
   } catch (err) {
     console.error(err.message);
@@ -65,18 +73,25 @@ exports.updateTicket = async (req, res) => {
     const updatedTicket = await db.query(query, [status, components_replaced, soh_after, ticket_resolved_at, id]);
     if (updatedTicket.rows.length === 0) return res.status(404).json({ status: 'error', message: 'Ticket not found' });
 
-    // When resolved, set battery back to AVAILABLE, SoH to 50%, assign to station
+    // When resolved, set battery back to AVAILABLE using actual soh_after, assign to station
     if (status === 'RESOLVED') {
       const batteryId = updatedTicket.rows[0].battery_id;
       const assignStation = station_id ? parseInt(station_id) : null;
+      const restoredSoh = soh_after ? parseFloat(soh_after) : 80;
+      const severity = restoredSoh >= 60 ? 'GOOD' : restoredSoh >= 40 ? 'MODERATE' : 'WARNING';
+      const recommendation = restoredSoh >= 60
+        ? 'Battery fully serviced by technician. Health restored. Ready for use.'
+        : 'Battery serviced. Health partially restored. Monitor usage closely.';
+
       await db.query(
         `UPDATE batteries 
-         SET status = 'AVAILABLE', state_of_health = 50,
-             station_id = COALESCE($1, station_id),
-             ai_severity = 'MODERATE',
-             ai_recommendation = 'Battery serviced by technician. Health restored to 50%. Monitor usage and swap regularly.'
-         WHERE battery_id = $2`,
-        [assignStation, batteryId]
+         SET status = 'AVAILABLE',
+             state_of_health = $1,
+             station_id = COALESCE($2, station_id),
+             ai_severity = $3,
+             ai_recommendation = $4
+         WHERE battery_id = $5`,
+        [restoredSoh, assignStation, severity, recommendation, batteryId]
       );
       if (assignStation) {
         await db.query('UPDATE stations SET available_count = available_count + 1 WHERE station_id = $1', [assignStation]);

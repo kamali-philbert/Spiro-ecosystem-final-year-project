@@ -111,16 +111,43 @@ export default function StationMap() {
                   </span>
                 </div>
 
-                {/* Battery count */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-white/60 text-sm">
-                    <Battery size={14} className="text-yellow-400" />
-                    <span>{s.available_count}/{s.total_capacity} batteries</span>
+                {/* Battery availability */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/50">Available for swap</span>
+                    <span className={`font-bold text-sm ${
+                      s.available_count == 0 ? 'text-red-400' :
+                      s.available_count < 3  ? 'text-yellow-400' : 'text-green-400'
+                    }`}>{s.available_count} / {s.total_capacity}</span>
                   </div>
-                  {s.available_count < 2 && (
-                    <div className="flex items-center gap-1 text-yellow-400 text-xs">
-                      <AlertCircle size={12} /> Low Stock
-                    </div>
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, (s.available_count / s.total_capacity) * 100)}%`,
+                        background: s.available_count == 0 ? '#ef4444' : s.available_count < 3 ? '#facc15' : '#3DB54A'
+                      }} />
+                  </div>
+                  {/* Mini breakdown */}
+                  <div className="flex items-center gap-3 text-xs flex-wrap">
+                    <span className="text-green-400">✓ {s.available_count} available</span>
+                    {s.charging_count > 0 && <span className="text-yellow-400">⚡ {s.charging_count} charging</span>}
+                    {s.in_use_count   > 0 && <span className="text-blue-400">🔄 {s.in_use_count} in use</span>}
+                    {s.flagged_count  > 0 && <span className="text-red-400">⚠ {s.flagged_count} flagged</span>}
+                  </div>
+                  {/* Status message */}
+                  {s.available_count == 0 ? (
+                    <p className="text-red-400 text-xs font-semibold flex items-center gap-1">
+                      <AlertCircle size={11} /> No batteries available — try another station
+                    </p>
+                  ) : s.available_count < 3 ? (
+                    <p className="text-yellow-400 text-xs font-semibold flex items-center gap-1">
+                      <AlertCircle size={11} /> Only {s.available_count} left — go soon
+                    </p>
+                  ) : (
+                    <p className="text-green-400 text-xs font-semibold flex items-center gap-1">
+                      <Battery size={11} /> {s.available_count} batteries ready for swap
+                    </p>
                   )}
                 </div>
 

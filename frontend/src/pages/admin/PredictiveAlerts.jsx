@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import API from '../../services/api';
-import { AlertTriangle, CheckCircle, RefreshCw, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle, RefreshCw, Zap, Wrench, UserCheck, Clock } from 'lucide-react';
 
 export default function PredictiveAlerts() {
   const [tickets,    setTickets]    = useState([]);
@@ -112,20 +112,78 @@ export default function PredictiveAlerts() {
       ) : (
         <div className="space-y-3">
           {tickets.map(t => {
-            const resolved = t.status === 'RESOLVED';
+            const resolved   = t.status === 'RESOLVED';
+            const inProgress = t.status === 'IN_PROGRESS';
+            const open       = t.status === 'OPEN';
+
+            const borderColor = resolved ? 'border-green-500' : inProgress ? 'border-yellow-500' : 'border-red-500';
+            const iconColor   = resolved ? 'text-green-400'  : inProgress ? 'text-yellow-400'  : 'text-red-400';
+
             return (
-              <div key={t.ticket_id} className={`glass p-5 border-l-4 ${resolved ? 'border-green-500' : 'border-red-500'}`}>
+              <div key={t.ticket_id} className={`glass p-5 border-l-4 ${borderColor}`}>
                 <div className="flex items-start gap-3">
-                  <AlertTriangle size={18} className={`mt-0.5 shrink-0 ${resolved ? 'text-green-400' : 'text-red-400'}`} />
+                  <AlertTriangle size={18} className={`mt-0.5 shrink-0 ${iconColor}`} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-white font-semibold text-sm">Battery #{t.battery_id} — Critical SoH</p>
-                      <span className={resolved ? 'badge-green' : 'badge-red'}>{t.status}</span>
+
+                    {/* Title row */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <p className="text-white font-semibold text-sm">
+                        Battery #{t.battery_id}
+                        {t.battery_serial && <span className="text-white/40 font-normal"> · {t.battery_serial}</span>}
+                      </p>
+                      {open       && <span className="bg-red-500/15 text-red-400 text-xs px-2 py-0.5 rounded-full font-semibold">⚠ CRITICAL — Awaiting Technician</span>}
+                      {inProgress && <span className="bg-yellow-500/15 text-yellow-400 text-xs px-2 py-0.5 rounded-full font-semibold">🔧 IN PROGRESS</span>}
+                      {resolved   && <span className="bg-green-500/15 text-green-400 text-xs px-2 py-0.5 rounded-full font-semibold">✓ RESOLVED</span>}
                     </div>
-                    <p className="text-white/60 text-sm">{t.issue_description}</p>
-                    <p className="text-white/30 text-xs mt-2">
-                      SoH at alert: <span className="text-red-400">{t.soh_before}%</span> | Ticket #{t.ticket_id} | Created: {new Date(t.created_at).toLocaleDateString()}
-                    </p>
+
+                    <p className="text-white/60 text-xs mb-3">{t.issue_description}</p>
+
+                    {/* Info grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <p className="text-white/30 text-xs mb-0.5">SoH at Alert</p>
+                        <p className="text-red-400 font-bold text-sm">{t.soh_before}%</p>
+                      </div>
+
+                      <div className="bg-white/5 rounded-lg px-3 py-2">
+                        <p className="text-white/30 text-xs mb-0.5">Ticket #</p>
+                        <p className="text-white font-semibold text-sm">#{t.ticket_id}</p>
+                      </div>
+
+                      {/* Technician notified */}
+                      <div className={`rounded-lg px-3 py-2 ${t.technician_name ? 'bg-[#2B3EE6]/15 border border-[#2B3EE6]/30' : 'bg-white/5'}`}>
+                        <p className="text-white/30 text-xs mb-0.5 flex items-center gap-1">
+                          <UserCheck size={10} /> Technician Notified
+                        </p>
+                        <p className={`font-semibold text-sm ${t.technician_name ? 'text-[#C8F000]' : 'text-white/30'}`}>
+                          {t.technician_name || 'None assigned'}
+                        </p>
+                      </div>
+
+                      {/* Resolved SoH or created date */}
+                      {resolved ? (
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                          <p className="text-white/30 text-xs mb-0.5 flex items-center gap-1">
+                            <Wrench size={10} /> SoH After Repair
+                          </p>
+                          <p className="text-green-400 font-bold text-sm">{t.soh_after ?? '—'}%</p>
+                        </div>
+                      ) : (
+                        <div className="bg-white/5 rounded-lg px-3 py-2">
+                          <p className="text-white/30 text-xs mb-0.5 flex items-center gap-1">
+                            <Clock size={10} /> Alerted
+                          </p>
+                          <p className="text-white/60 text-sm">{new Date(t.created_at).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Resolved summary */}
+                    {resolved && t.resolved_at && (
+                      <p className="text-green-400/60 text-xs mt-2">
+                        ✓ Resolved on {new Date(t.resolved_at).toLocaleString()} · Battery returned to station as AVAILABLE
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
